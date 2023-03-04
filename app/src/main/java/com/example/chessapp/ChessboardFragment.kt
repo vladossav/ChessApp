@@ -13,7 +13,7 @@ import com.example.chessapp.figures.*
 
 class ChessboardFragment : Fragment() {
     private var displayBoard = Array(8) {Array<TextView?>(8) {null} }
-    private var boardFigure = Array(8) {Array(8) {Position(null)} }
+    private var boardFigures = Array(8) {Array(8) {Position(null)} }
     private var arrayOfCellIds = arrayOf(
         arrayOf(R.id.R00, R.id.R01, R.id.R02, R.id.R03, R.id.R04, R.id.R05, R.id.R06, R.id.R07),
         arrayOf(R.id.R10, R.id.R11, R.id.R12, R.id.R13, R.id.R14, R.id.R15, R.id.R16, R.id.R17),
@@ -25,8 +25,11 @@ class ChessboardFragment : Fragment() {
         arrayOf(R.id.R70, R.id.R71, R.id.R72, R.id.R73, R.id.R74, R.id.R75, R.id.R76, R.id.R77)
     )
     private var clickedPos: Coordinates = Coordinates(0,0)
+    private var lastPos : Coordinates = Coordinates(0,0)
     private var cellSelected = false
+    private var whitePlayerTurn = true
     private var numOfMoves = 0
+    private var listOfAllowedSteps = ArrayList<Coordinates>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,27 +42,27 @@ class ChessboardFragment : Fragment() {
     }
     
     private fun initBoard(view: View) {
-        boardFigure[0][0].setFigure(Rook(false))
-        boardFigure[1][0].setFigure(Knight(false))
-        boardFigure[2][0].setFigure(Bishop(false))
-        boardFigure[3][0].setFigure(Queen(false))
-        boardFigure[4][0].setFigure(King(false))
-        boardFigure[5][0].setFigure(Bishop(false))
-        boardFigure[6][0].setFigure(Knight(false))
-        boardFigure[7][0].setFigure(Rook(false))
+        boardFigures[0][0].setFigure(Rook(false))
+        boardFigures[1][0].setFigure(Knight(false))
+        boardFigures[2][0].setFigure(Bishop(false))
+        boardFigures[3][0].setFigure(Queen(false))
+        boardFigures[4][0].setFigure(King(false))
+        boardFigures[5][0].setFigure(Bishop(false))
+        boardFigures[6][0].setFigure(Knight(false))
+        boardFigures[7][0].setFigure(Rook(false))
 
-        boardFigure[0][7].setFigure(Rook(true))
-        boardFigure[1][7].setFigure(Knight(true))
-        boardFigure[2][7].setFigure(Bishop(true))
-        boardFigure[3][7].setFigure(Queen(true))
-        boardFigure[4][7].setFigure(King(true))
-        boardFigure[5][7].setFigure(Bishop(true))
-        boardFigure[6][7].setFigure(Knight(true))
-        boardFigure[7][7].setFigure(Rook(true))
+        boardFigures[0][7].setFigure(Rook(true))
+        boardFigures[1][7].setFigure(Knight(true))
+        boardFigures[2][7].setFigure(Bishop(true))
+        boardFigures[3][7].setFigure(Queen(true))
+        boardFigures[4][7].setFigure(King(true))
+        boardFigures[5][7].setFigure(Bishop(true))
+        boardFigures[6][7].setFigure(Knight(true))
+        boardFigures[7][7].setFigure(Rook(true))
 
         for (i in 0..7) {
-            boardFigure[i][1].setFigure(Pawn(false))
-            boardFigure[i][6].setFigure(Pawn(true))
+            boardFigures[i][1].setFigure(Pawn(false))
+            boardFigures[i][6].setFigure(Pawn(true))
         }
 
         for (i in 0..7)
@@ -68,7 +71,7 @@ class ChessboardFragment : Fragment() {
 
         for (i in 0..7) {
             for (j in 0..7)
-                Log.d("figure", boardFigure[i][j].getFigure().toString() + " ")
+                Log.d("figure", boardFigures[i][j].getFigure().toString() + " ")
             Log.d("figure","\n")
         }
 
@@ -89,7 +92,7 @@ class ChessboardFragment : Fragment() {
     private fun setBoard() {
         for (i in 0..7)
             for (j in 0..7) {
-                val p: Figure? = boardFigure[i][j].getFigure()
+                val p: Figure? = boardFigures[i][j].getFigure()
 
                 if (p != null) {
                     if (p is Pawn) {
@@ -130,7 +133,6 @@ class ChessboardFragment : Fragment() {
     }
 
     private fun onCellClick(view: View) {
-        Log.d("cell","onClick")
         when(view.id) {
             R.id.R00 -> clickedPos.setXY(0,0)
             R.id.R10 -> clickedPos.setXY(1,0)
@@ -205,17 +207,49 @@ class ChessboardFragment : Fragment() {
             R.id.R77 -> clickedPos.setXY(7,7)
             else -> Log.d("cell","wrong")
         }
-        Log.d("cell", clickedPos.getX().toString() + " " + clickedPos.getY().toString())
 
-        if (cellSelected) {
+        val x = clickedPos.getX()
+        val y = clickedPos.getY()
+        Log.d("cell", "$x $y")
 
+        if (!cellSelected) {
+            if (boardFigures[x][y].getFigure() == null)
+                return
+            else {
+                if (boardFigures[x][y].getFigure()!!.isWhite() != whitePlayerTurn)
+                    return
+                listOfAllowedSteps.clear()
+                listOfAllowedSteps = boardFigures[x][y].getFigure()!!.getAllowedSteps(boardFigures, clickedPos)
+                cellSelected = true
+            }
         }
         else {
 
+            if (checkStepIsAllowed(clickedPos)) {
+
+                // TODO: проверить мат ли на доске?
+                boardFigures[x][y].setFigure(boardFigures[lastPos.getX()][lastPos.getY()].getFigure())
+                boardFigures[lastPos.getX()][lastPos.getY()].setFigure(null)
+                whitePlayerTurn = !whitePlayerTurn
+
+            } else {
+
+            }
+            cellSelected = false
         }
 
+
+
+        lastPos = Coordinates(x, y)
+        setBoard()
     }
 
+    fun checkStepIsAllowed(step: Coordinates): Boolean {
+        for (pos in listOfAllowedSteps)
+            if (pos.getX() == step.getX() && pos.getY() == step.getY())
+                return true
+        return false
+    }
 
 
 
