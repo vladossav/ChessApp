@@ -226,28 +226,60 @@ class ChessboardFragment : Fragment() {
         else {
 
             if (checkStepIsAllowed(clickedPos)) {
-
-                // TODO: проверить мат ли на доске?
+                val attackedFigure = boardFigures[x][y].getFigure()
                 boardFigures[x][y].setFigure(boardFigures[lastPos.getX()][lastPos.getY()].getFigure())
                 boardFigures[lastPos.getX()][lastPos.getY()].setFigure(null)
+                if (isKingInDanger()) {
+                    boardFigures[lastPos.getX()][lastPos.getY()].setFigure(boardFigures[x][y].getFigure())
+                    boardFigures[x][y].setFigure(attackedFigure)
+                    cellSelected = false
+                    return
+                }
                 whitePlayerTurn = !whitePlayerTurn
-
-            } else {
-
             }
             cellSelected = false
         }
-
-
 
         lastPos = Coordinates(x, y)
         setBoard()
     }
 
-    fun checkStepIsAllowed(step: Coordinates): Boolean {
+    private fun checkStepIsAllowed(step: Coordinates): Boolean {
         for (pos in listOfAllowedSteps)
             if (pos.getX() == step.getX() && pos.getY() == step.getY())
                 return true
+        return false
+    }
+
+    private fun isKingInDanger():Boolean {
+        var kingPos: Coordinates = Coordinates(0,0)
+        val listOfEnemyFigures = ArrayList<Coordinates>()
+        for (i in 0..7)
+            for (j in 0..7)
+                if (boardFigures[i][j].getFigure() != null) {
+                    if (boardFigures[i][j].getFigure()!!.isWhite() != whitePlayerTurn) {
+                        listOfEnemyFigures.add(Coordinates(i,j))
+                        continue
+                    }
+                    if (boardFigures[i][j].getFigure() is King &&
+                        boardFigures[i][j].getFigure()!!.isWhite() == whitePlayerTurn) {
+                        kingPos = Coordinates(i,j)
+                    }
+                }
+
+        for (pos in listOfEnemyFigures) {
+            val figure = boardFigures[pos.getX()][pos.getY()].getFigure()
+            var list: ArrayList<Coordinates>
+
+            list = figure!!.getAllowedSteps(boardFigures, pos)
+            if (figure is Pawn)
+                list = figure.getStepsWhichCanAttack()
+
+
+            for (allowedPos in list)
+                if (allowedPos.getX() == kingPos.getX() && allowedPos.getY() == kingPos.getY())
+                    return true
+        }
         return false
     }
 
