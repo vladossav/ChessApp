@@ -9,6 +9,9 @@ import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.TextView
 import com.example.chessapp.figures.*
+import io.socket.client.IO
+import io.socket.client.Socket
+import io.socket.emitter.Emitter
 
 
 class ChessboardFragment : Fragment() {
@@ -30,6 +33,28 @@ class ChessboardFragment : Fragment() {
     private var whitePlayerTurn = true
     private var numOfMoves = 0
     private var listOfAllowedSteps = ArrayList<Coordinates>()
+    lateinit var socket: Socket
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        try {
+            //socket = IO.socket("http://10.0.2.2:3000")
+            socket = IO.socket("http://10.0.2.2:8000")
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.d("socket", "Failed to connect")
+        }
+
+        socket.connect()
+        Log.d("socket", "socketID: " + socket.id())
+        socket.on(Socket.EVENT_CONNECT, onConnect)
+        Log.d("socket",socket.connected().toString())
+    }
+
+    var onConnect = Emitter.Listener {
+        Log.d("socket","success")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -126,6 +151,10 @@ class ChessboardFragment : Fragment() {
             }
     }
 
+    override fun onDestroy() {
+        socket.disconnect()
+        super.onDestroy()
+    }
     companion object {
 
         @JvmStatic
