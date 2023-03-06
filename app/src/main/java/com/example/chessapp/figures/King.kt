@@ -25,6 +25,28 @@ class King(isWhite: Boolean): Figure(isWhite) {
                 }
             }
 
+        if (this.isWhite() && coordinates.getX() == 4 && coordinates.getY() == 7 &&
+            board[5][7].getFigure() == null && board[6][7].getFigure() == null &&
+            board[7][7].getFigure() is Rook && board[7][7].getFigure()!!.isWhite())
+            steps.add(Coordinates(6,7))
+
+        if (!this.isWhite() && coordinates.getX() == 4 && coordinates.getY() == 0 &&
+            board[5][0].getFigure() == null && board[6][0].getFigure() == null &&
+            board[7][0].getFigure() is Rook && !board[7][0].getFigure()!!.isWhite())
+            steps.add(Coordinates(6,0))
+
+        if (this.isWhite() && coordinates.getX() == 4 && coordinates.getY() == 7
+            && board[1][7].getFigure() == null && board[2][7].getFigure() == null &&
+            board[3][7].getFigure() == null &&  board[0][7].getFigure() is Rook
+            && board[0][7].getFigure()!!.isWhite())
+            steps.add(Coordinates(2,7))
+
+        if (!this.isWhite() && coordinates.getX() == 4 && coordinates.getY() == 0
+            && board[1][0].getFigure() == null && board[2][0].getFigure() == null &&
+            board[3][0].getFigure() == null &&  board[0][0].getFigure() is Rook
+            && !board[0][0].getFigure()!!.isWhite())
+            steps.add(Coordinates(2,0))
+
         return steps
     }
 }

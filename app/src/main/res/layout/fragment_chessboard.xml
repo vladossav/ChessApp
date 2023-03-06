@@ -992,4 +992,18 @@
             />
     </GridLayout>
 
+     <TextView
+         android:id="@+id/step_tv"
+         android:text="Ход черных"
+         android:textColor="@color/black"
+         android:textStyle="bold"
+         android:textSize="30sp"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintTop_toBottomOf="@id/gridLayout"
+         app:layout_constraintBottom_toBottomOf="parent"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

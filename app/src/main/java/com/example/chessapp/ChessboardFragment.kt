@@ -8,6 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
+import androidx.navigation.fragment.findNavController
 import com.example.chessapp.figures.*
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -61,12 +64,41 @@ class ChessboardFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_chessboard, container, false)
-        initBoard(view)
 
+        for (i in 0..7)
+            for (j in 0..7)
+                displayBoard[i][j] = view.findViewById(arrayOfCellIds[i][j])
+
+        val grid = view.findViewById<GridLayout>(R.id.gridLayout)
+        for (i in 0 until grid.childCount) {
+            val tv: TextView = grid.getChildAt(i) as TextView
+            tv.setOnClickListener {
+                onCellClick(it)
+            }
+        }
+
+        initBoard()
         return view
     }
-    
-    private fun initBoard(view: View) {
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Предупреждение!")
+                        .setMessage("В случае выхода из игры результаты не сохранятся. Вы уверены, что хотите выйти?")
+                        .setPositiveButton("Да") { _, _ ->
+                           findNavController().popBackStack()
+                        }
+                        .setNegativeButton("Отмена") {_,_ -> }
+                        .show()
+                }
+            })
+    }
+
+    private fun initBoard() {
         boardFigures[0][0].setFigure(Rook(false))
         boardFigures[1][0].setFigure(Knight(false))
         boardFigures[2][0].setFigure(Bishop(false))
@@ -88,24 +120,6 @@ class ChessboardFragment : Fragment() {
         for (i in 0..7) {
             boardFigures[i][1].setFigure(Pawn(false))
             boardFigures[i][6].setFigure(Pawn(true))
-        }
-
-        for (i in 0..7)
-            for (j in 0..7)
-                displayBoard[i][j] = view.findViewById(arrayOfCellIds[i][j])
-
-        for (i in 0..7) {
-            for (j in 0..7)
-                Log.d("figure", boardFigures[i][j].getFigure().toString() + " ")
-            Log.d("figure","\n")
-        }
-
-        val grid = view.findViewById<GridLayout>(R.id.gridLayout)
-        for (i in 0 until grid.childCount) {
-            val tv: TextView = grid.getChildAt(i) as TextView
-            tv.setOnClickListener {
-                onCellClick(it)
-            }
         }
 
         cellSelected = false
@@ -154,11 +168,6 @@ class ChessboardFragment : Fragment() {
     override fun onDestroy() {
         socket.disconnect()
         super.onDestroy()
-    }
-    companion object {
-
-        @JvmStatic
-        fun newInstance() = ChessboardFragment()
     }
 
     private fun onCellClick(view: View) {
@@ -256,6 +265,7 @@ class ChessboardFragment : Fragment() {
 
             if (checkStepIsAllowed(clickedPos)) {
                 val attackedFigure = boardFigures[x][y].getFigure()
+
                 boardFigures[x][y].setFigure(boardFigures[lastPos.getX()][lastPos.getY()].getFigure())
                 boardFigures[lastPos.getX()][lastPos.getY()].setFigure(null)
                 if (isKingInDanger()) {
@@ -264,6 +274,17 @@ class ChessboardFragment : Fragment() {
                     cellSelected = false
                     return
                 }
+
+                //проверка рокировки
+                if (boardFigures[x][y].getFigure() is King && x == (lastPos.getX() + 2)) {
+                    boardFigures[5][y].setFigure(boardFigures[7][y].getFigure())
+                    boardFigures[7][y].setFigure(null)
+                }
+                if (boardFigures[x][y].getFigure() is King && x == (lastPos.getX() - 2)) {
+                    boardFigures[3][y].setFigure(boardFigures[0][y].getFigure())
+                    boardFigures[0][y].setFigure(null)
+                }
+
                 whitePlayerTurn = !whitePlayerTurn
             }
             cellSelected = false
