@@ -10,11 +10,13 @@ import android.widget.GridLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.chessapp.figures.*
 import io.socket.client.IO
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
+import kotlin.collections.ArrayList
 
 
 class ChessboardFragment : Fragment() {
@@ -34,15 +36,18 @@ class ChessboardFragment : Fragment() {
     private var lastPos : Coordinates = Coordinates(0,0)
     private var cellSelected = false
     private var whitePlayerTurn = true
+    private var whiteChessboardSide = true
     private var numOfMoves = 0
     private var listOfAllowedSteps = ArrayList<Coordinates>()
     lateinit var socket: Socket
 
+    val viewModel: ChessboardViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-            //socket = IO.socket("http://10.0.2.2:3000")
-            socket = IO.socket("http://10.0.2.2:8000")
+            //socket = IO.socket("http://37.194.20.87:8000")
+            socket = IO.socket("http://localhost:8000")
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -50,13 +55,15 @@ class ChessboardFragment : Fragment() {
         }
 
         socket.connect()
-        Log.d("socket", "socketID: " + socket.id())
+
         socket.on(Socket.EVENT_CONNECT, onConnect)
-        Log.d("socket",socket.connected().toString())
+
     }
 
     var onConnect = Emitter.Listener {
+        Log.d("socket", "socketID: " + socket.id())
         Log.d("socket","success")
+        Log.d("socket",socket.connected().toString())
     }
 
     override fun onCreateView(
@@ -88,7 +95,7 @@ class ChessboardFragment : Fragment() {
                 override fun handleOnBackPressed() {
                     AlertDialog.Builder(requireContext())
                         .setTitle("Предупреждение!")
-                        .setMessage("В случае выхода из игры результаты не сохранятся. Вы уверены, что хотите выйти?")
+                        .setMessage("Вам будет присвоено автоматическое поражение. Вы уверены, что хотите выйти?")
                         .setPositiveButton("Да") { _, _ ->
                            findNavController().popBackStack()
                         }
@@ -268,7 +275,8 @@ class ChessboardFragment : Fragment() {
 
                 boardFigures[x][y].setFigure(boardFigures[lastPos.getX()][lastPos.getY()].getFigure())
                 boardFigures[lastPos.getX()][lastPos.getY()].setFigure(null)
-                if (isKingInDanger()) {
+                if (isKingInDanger(boardFigures)) {
+
                     boardFigures[lastPos.getX()][lastPos.getY()].setFigure(boardFigures[x][y].getFigure())
                     boardFigures[x][y].setFigure(attackedFigure)
                     cellSelected = false
@@ -292,6 +300,18 @@ class ChessboardFragment : Fragment() {
 
         lastPos = Coordinates(x, y)
         setBoard()
+
+        if (isKingInDanger(boardFigures) && isCheckmate()) {
+
+            Log.d("board","CHECKMATE!!!")
+            AlertDialog.Builder(requireContext())
+                .setTitle("Игра закончена!")
+                .setMessage("_____ выиграли!")
+                .setPositiveButton("ОК") { _, _ ->
+                    findNavController().popBackStack()
+                }
+                .show()
+        }
     }
 
     private fun checkStepIsAllowed(step: Coordinates): Boolean {
@@ -301,30 +321,29 @@ class ChessboardFragment : Fragment() {
         return false
     }
 
-    private fun isKingInDanger():Boolean {
+    private fun isKingInDanger(board: Array<Array<Position>>):Boolean {
         var kingPos: Coordinates = Coordinates(0,0)
         val listOfEnemyFigures = ArrayList<Coordinates>()
         for (i in 0..7)
             for (j in 0..7)
-                if (boardFigures[i][j].getFigure() != null) {
-                    if (boardFigures[i][j].getFigure()!!.isWhite() != whitePlayerTurn) {
+                if (board[i][j].getFigure() != null) {
+                    if (board[i][j].getFigure()!!.isWhite() != whitePlayerTurn) {
                         listOfEnemyFigures.add(Coordinates(i,j))
                         continue
                     }
-                    if (boardFigures[i][j].getFigure() is King &&
-                        boardFigures[i][j].getFigure()!!.isWhite() == whitePlayerTurn) {
+                    if (board[i][j].getFigure() is King &&
+                        board[i][j].getFigure()!!.isWhite() == whitePlayerTurn) {
                         kingPos = Coordinates(i,j)
                     }
                 }
 
         for (pos in listOfEnemyFigures) {
-            val figure = boardFigures[pos.getX()][pos.getY()].getFigure()
+            val figure = board[pos.getX()][pos.getY()].getFigure()
             var list: ArrayList<Coordinates>
 
-            list = figure!!.getAllowedSteps(boardFigures, pos)
+            list = figure!!.getAllowedSteps(board, pos)
             if (figure is Pawn)
                 list = figure.getStepsWhichCanAttack()
-
 
             for (allowedPos in list)
                 if (allowedPos.getX() == kingPos.getX() && allowedPos.getY() == kingPos.getY())
@@ -333,6 +352,35 @@ class ChessboardFragment : Fragment() {
         return false
     }
 
+    fun isCheckmate(): Boolean {
+        var kingPos: Coordinates = Coordinates(2,2)
+        for (i in 0..7)
+            for (j in 0..7)
+                if (boardFigures[i][j].getFigure() != null) {
+                    if (boardFigures[i][j].getFigure() is King &&
+                        boardFigures[i][j].getFigure()!!.isWhite() == whitePlayerTurn) {
+                        kingPos = Coordinates(i,j)
+                    }
+                }
 
+        val xKing = kingPos.getX()
+        val yKing = kingPos.getY()
+        Log.d("board","$xKing $yKing")
+
+        if (boardFigures[xKing][yKing].getFigure() !is King) return false
+        val kingAllowedSteps = boardFigures[xKing][yKing].getFigure()!!
+            .getAllowedSteps(boardFigures,kingPos)
+        for (step in kingAllowedSteps) {
+            val board: Array<Array<Position>> = Array(8) {Array(8) {Position(null)} }
+            for (i in 0..7)
+                for (j in 0..7)
+                    board[i][j] = Position(boardFigures[i][j])
+
+            board[step.getX()][step.getY()].setFigure(boardFigures[xKing][yKing].getFigure())
+            if (!isKingInDanger(board)) return false
+
+        }
+        return true
+    }
 
 }
