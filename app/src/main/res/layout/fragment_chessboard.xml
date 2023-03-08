@@ -18,13 +18,14 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:text="8"
-            android:textStyle="bold"
-            android:textColor="@color/colorBoardDark"
             android:id="@+id/R000"
             android:layout_width="43dp"
             android:layout_height="43dp"
-            android:background="@color/colorBoardLight" />
+            android:background="@color/colorBoardLight"
+            android:includeFontPadding="false"
+            android:text="8"
+            android:textColor="@color/colorBoardDark"
+            android:textStyle="bold" />
 
         <View
             android:id="@+id/R010"
@@ -995,6 +996,29 @@
             />
     </GridLayout>
 
+    <TextView
+        android:id="@+id/you_tv"
+        android:text="You: "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@id/backgroundBoard"
+        app:layout_constraintTop_toBottomOf="@id/backgroundBoard"
+        />
+
+    <TextView
+        android:id="@+id/opponent_tv"
+        android:text="Opponent: "
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="3dp"
+        app:layout_constraintStart_toStartOf="@id/backgroundBoard"
+        app:layout_constraintBottom_toTopOf="@id/backgroundBoard"
+        />
+
      <TextView
          android:id="@+id/step_tv"
          android:text="Ход черных"
@@ -1008,5 +1032,6 @@
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
          />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

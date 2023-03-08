@@ -2,7 +2,6 @@ package com.example.chessapp
 
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.chessapp.figures.*
@@ -10,24 +9,24 @@ import com.example.chessapp.figures.*
 class ChessboardViewModel: ViewModel() {
     var displayBoard = Array(8) {Array<View?>(8) {null} }
     var whitePlayerTurn: MutableLiveData<Boolean> = MutableLiveData(true)
+    var gameFinished: MutableLiveData<Boolean> = MutableLiveData(false)
 
     private var boardFigures = Array(8) {Array(8) {Position(null)} }
     private var clickedPos: Coordinates = Coordinates(0,0)
     private var lastPos: Coordinates = Coordinates(0,0)
     private var cellSelected = false
 
-    var whiteChessboardSide = true
+    var isWhiteChessboardSide = true
     private var numOfMoves = 0
     private var listOfAllowedSteps = ArrayList<Coordinates>()
 
-    fun initBoard() {
+    fun initBoard(isWhiteSide: Boolean) {
+        isWhiteChessboardSide = isWhiteSide
         setStartPosition()
         cellSelected = false
         numOfMoves = 0
         setBoard()
     }
-
-    fun isGameOver() = isKingInDanger(boardFigures) && isCheckmate()
 
     fun cellHandling(cellId: Int) {
         setClickPosition(cellId)
@@ -70,13 +69,15 @@ class ChessboardViewModel: ViewModel() {
                     boardFigures[0][y].setFigure(null)
                 }
 
-                whitePlayerTurn.postValue(!(whitePlayerTurn.value)!!)
+                whitePlayerTurn.value = !whitePlayerTurn.value!!
             }
             cellSelected = false
         }
 
         lastPos = Coordinates(x, y)
         setBoard()
+
+        if (isKingInDanger(boardFigures) && isCheckmate()) gameFinished.postValue(true)
     }
 
     private fun isKingInDanger(board: Array<Array<Position>>):Boolean {
@@ -150,36 +151,42 @@ class ChessboardViewModel: ViewModel() {
     private fun setBoard() {
         for (i in 0..7)
             for (j in 0..7) {
+                var x = i
+                var y = j
+                if (!isWhiteChessboardSide) {
+                    x = 7 - i
+                    y = 7 - j
+                }
                 val p: Figure? = boardFigures[i][j].getFigure()
 
                 if (p != null) {
                     if (p is Pawn) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wpawn)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.bpawn)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wpawn)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.bpawn)
                     }
                     else if (p is Queen) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wqueen)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.bqueen)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wqueen)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.bqueen)
                     }
                     else if (p is Knight) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wknight)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.bknight)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wknight)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.bknight)
                     }
                     else if (p is Bishop) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wbishop)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.bbishop)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wbishop)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.bbishop)
                     }
                     else if (p is King) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wking)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.bking)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wking)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.bking)
                     }
                     else if (p is Rook) {
-                        if (p.isWhite()) displayBoard[i][j]?.setBackgroundResource(R.drawable.wrook)
-                        else displayBoard[i][j]?.setBackgroundResource(R.drawable.brook)
+                        if (p.isWhite()) displayBoard[x][y]?.setBackgroundResource(R.drawable.wrook)
+                        else displayBoard[x][y]?.setBackgroundResource(R.drawable.brook)
                     }
                 }
                 else {
-                    displayBoard[i][j]?.setBackgroundResource(0)
+                    displayBoard[x][y]?.setBackgroundResource(0)
                 }
             }
     }
@@ -283,5 +290,6 @@ class ChessboardViewModel: ViewModel() {
             R.id.R67 -> clickedPos.setXY(6,7)
             R.id.R77 -> clickedPos.setXY(7,7)
         }
+        if (!isWhiteChessboardSide) clickedPos.setXY(7 - clickedPos.getX(), 7 - clickedPos.getY())
     }
 }

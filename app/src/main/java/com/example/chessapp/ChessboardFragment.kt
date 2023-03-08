@@ -25,7 +25,7 @@ class ChessboardFragment : Fragment() {
         super.onCreate(savedInstanceState)
         try {
             //socket = IO.socket("http://37.194.20.87:8000")
-            socket = IO.socket("http://localhost:8000")
+            socket = IO.socket("http://10.0.2.2:8000")
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -56,21 +56,39 @@ class ChessboardFragment : Fragment() {
         for (i in 0 until grid.childCount) {
             val tv: View = grid.getChildAt(i) as View
             tv.setOnClickListener {
-                onCellClick(it)
+                vm.cellHandling(it.id)
             }
         }
 
-        vm.initBoard()
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val stepTurnTv = view.findViewById<TextView>(R.id.step_tv)
 
+        vm.initBoard(isWhiteSide = false)
+
+        val stepTurnTv = view.findViewById<TextView>(R.id.step_tv)
         vm.whitePlayerTurn.observe(viewLifecycleOwner) {
             if (it) stepTurnTv.text = "Ход белых"
             else stepTurnTv.text = "Ход черных"
+        }
+
+        vm.gameFinished.observe(viewLifecycleOwner) {
+            if (vm.gameFinished.value!!) {
+                var msg = ""
+                if (vm.whitePlayerTurn.value!!) msg = "Черные выиграли!"
+                else msg = "Белые выиграли!"
+                Log.d("board","CHECKMATE!!!")
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Игра закончена!")
+                    .setMessage(msg)
+                    .setPositiveButton("ОК") { _, _ ->
+                        findNavController().popBackStack()
+                    }
+                    .setCancelable(false)
+                    .show()
+            }
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
@@ -86,21 +104,6 @@ class ChessboardFragment : Fragment() {
                         .show()
                 }
             })
-    }
-
-    private fun onCellClick(view: View) {
-        vm.cellHandling(view.id)
-
-        if (vm.isGameOver()) {
-            Log.d("board","CHECKMATE!!!")
-            AlertDialog.Builder(requireContext())
-                .setTitle("Игра закончена!")
-                .setMessage("_____ выиграли!")
-                .setPositiveButton("ОК") { _, _ ->
-                    findNavController().popBackStack()
-                }
-                .show()
-        }
     }
 
     override fun onDestroy() {
