@@ -10,6 +10,8 @@ class ChessboardViewModel: ViewModel() {
     var displayBoard = Array(8) {Array<View?>(8) {null} }
     var whitePlayerTurn: MutableLiveData<Boolean> = MutableLiveData(true)
     var gameFinished: MutableLiveData<Boolean> = MutableLiveData(false)
+    var youName: String = ""
+    var opponentName: String = ""
 
     private var boardFigures = Array(8) {Array(8) {Position(null)} }
     private var clickedPos: Coordinates = Coordinates(0,0)

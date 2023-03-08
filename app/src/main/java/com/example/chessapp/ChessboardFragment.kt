@@ -23,6 +23,7 @@ class ChessboardFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         try {
             //socket = IO.socket("http://37.194.20.87:8000")
             socket = IO.socket("http://10.0.2.2:8000")
@@ -60,7 +61,15 @@ class ChessboardFragment : Fragment() {
             }
         }
 
+        val youText = view.findViewById<TextView>(R.id.you_tv)
+        val str = requireArguments().getString(YOU_NAME_KEY)
+        youText.append(str)
+
         return view
+    }
+
+    companion object {
+        const val YOU_NAME_KEY = "YOU_NAME_KEY"
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
