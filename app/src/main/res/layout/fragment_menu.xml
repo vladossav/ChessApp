@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context=".MenuFragment">
+    tools:context=".screen.MenuFragment">
 
     <com.google.android.material.button.MaterialButton
         android:text="Новая игра"

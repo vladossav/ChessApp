@@ -7,6 +7,7 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="loading">#3D360D</color>
     <color name="colorBoardDark">#f0ba8c29</color>
     <color name="colorBoardLight">#f0f0d157</color>
     <color name="colorDanger">#a2ce2a7c</color>

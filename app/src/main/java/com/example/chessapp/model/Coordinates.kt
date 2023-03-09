@@ -1,4 +1,4 @@
-package com.example.chessapp
+package com.example.chessapp.model
 
 class Coordinates(private var x: Int, private var y: Int) {
 

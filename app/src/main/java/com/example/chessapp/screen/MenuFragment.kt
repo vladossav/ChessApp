@@ -1,4 +1,4 @@
-package com.example.chessapp
+package com.example.chessapp.screen
 
 import android.app.Dialog
 import android.graphics.Color
@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.core.os.bundleOf
 import androidx.navigation.fragment.findNavController
+import com.example.chessapp.R
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 
@@ -46,7 +47,8 @@ class MenuFragment : Fragment() {
         btnConnect.setOnClickListener {
             dialog.cancel()
             val text = inputText.text.toString()
-            findNavController().navigate(R.id.action_menuFragment_to_chessboardFragment,
+            findNavController().navigate(
+                R.id.action_menuFragment_to_chessboardFragment,
             bundleOf(ChessboardFragment.YOU_NAME_KEY to text))
         }
         btnCancel.setOnClickListener{

@@ -1,4 +1,4 @@
-package com.example.chessapp
+package com.example.chessapp.screen
 
 import android.os.Bundle
 import android.util.Log
@@ -7,40 +7,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.GridLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import io.socket.client.IO
-import io.socket.client.Socket
-import io.socket.emitter.Emitter
-
+import com.example.chessapp.R
 
 class ChessboardFragment : Fragment() {
-    private lateinit var socket: Socket
     private val vm: ChessboardViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        try {
-            //socket = IO.socket("http://37.194.20.87:8000")
-            socket = IO.socket("http://10.0.2.2:8000")
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.d("socket", "Failed to connect")
-        }
-
-        socket.connect()
-        socket.on(Socket.EVENT_CONNECT, onConnect)
-    }
-
-    private var onConnect = Emitter.Listener {
-        Log.d("socket", "socketID: " + socket.id())
-        Log.d("socket","success")
-        Log.d("socket",socket.connected().toString())
+        val str = requireArguments().getString(YOU_NAME_KEY).toString()
+        vm.yourName = str
+        vm.socket.connect()
     }
 
     override fun onCreateView(
@@ -61,9 +44,8 @@ class ChessboardFragment : Fragment() {
             }
         }
 
-        val youText = view.findViewById<TextView>(R.id.you_tv)
         val str = requireArguments().getString(YOU_NAME_KEY)
-        youText.append(str)
+        view.findViewById<TextView>(R.id.you_tv).append(str)
 
         return view
     }
@@ -75,7 +57,15 @@ class ChessboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        vm.initBoard(isWhiteSide = false)
+        vm.isLoading.observe(viewLifecycleOwner) {
+            view.findViewById<ProgressBar>(R.id.loading).isVisible = it
+            view.findViewById<View>(R.id.background_loading).isVisible = it
+            view.findViewById<TextView>(R.id.loading_waiting_text).isVisible = it
+        }
+
+        vm.opponentName.observe(viewLifecycleOwner) {
+            view.findViewById<TextView>(R.id.opponent_tv).append(it)
+        }
 
         val stepTurnTv = view.findViewById<TextView>(R.id.step_tv)
         vm.whitePlayerTurn.observe(viewLifecycleOwner) {
@@ -85,14 +75,14 @@ class ChessboardFragment : Fragment() {
 
         vm.gameFinished.observe(viewLifecycleOwner) {
             if (vm.gameFinished.value!!) {
-                var msg = ""
-                if (vm.whitePlayerTurn.value!!) msg = "Черные выиграли!"
-                else msg = "Белые выиграли!"
+                val msg = if (vm.whitePlayerTurn.value!!) "Черные выиграли!"
+                else "Белые выиграли!"
                 Log.d("board","CHECKMATE!!!")
                 AlertDialog.Builder(requireContext())
                     .setTitle("Игра закончена!")
                     .setMessage(msg)
                     .setPositiveButton("ОК") { _, _ ->
+                        vm.socket.disconnect()
                         findNavController().popBackStack()
                     }
                     .setCancelable(false)
@@ -107,7 +97,8 @@ class ChessboardFragment : Fragment() {
                         .setTitle("Предупреждение!")
                         .setMessage("Вам будет присвоено автоматическое поражение. Вы уверены, что хотите выйти?")
                         .setPositiveButton("Да") { _, _ ->
-                           findNavController().popBackStack()
+                            vm.socket.disconnect()
+                            findNavController().popBackStack()
                         }
                         .setNegativeButton("Отмена") {_,_ -> }
                         .show()
@@ -116,7 +107,7 @@ class ChessboardFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        socket.disconnect()
+        vm.socket.disconnect()
         super.onDestroy()
     }
 

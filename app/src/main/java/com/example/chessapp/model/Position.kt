@@ -1,6 +1,6 @@
-package com.example.chessapp
+package com.example.chessapp.model
 
-import com.example.chessapp.figures.Figure
+import com.example.chessapp.model.figures.Figure
 
 class Position(private var figure: Figure?) {
     constructor(pos: Position) : this(pos.figure)

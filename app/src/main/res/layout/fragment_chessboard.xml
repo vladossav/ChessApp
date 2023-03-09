@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/chessboard_loading_theme"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ChessboardFragment">
+    tools:context=".screen.ChessboardFragment">
 
     <GridLayout
         android:id="@+id/backgroundBoard"
@@ -17,7 +18,7 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
+        <View
             android:id="@+id/R000"
             android:layout_width="43dp"
             android:layout_height="43dp"
@@ -1034,6 +1035,45 @@
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
          />
+
+    <View
+        android:id="@+id/background_loading"
+        android:visibility="gone"
+        android:background="@color/colorBoardLight"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <ProgressBar
+        android:id="@+id/loading"
+        android:theme="@style/progress_loading"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+
+    <TextView
+        android:id="@+id/loading_waiting_text"
+        android:text="Поиск соперника..."
+        android:visibility="gone"
+        android:textStyle="bold"
+        android:textSize="25sp"
+        android:textColor="@color/loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loading"
+        />
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

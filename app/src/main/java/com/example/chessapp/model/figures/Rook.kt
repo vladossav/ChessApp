@@ -1,7 +1,7 @@
-package com.example.chessapp.figures
+package com.example.chessapp.model.figures
 
-import com.example.chessapp.Coordinates
-import com.example.chessapp.Position
+import com.example.chessapp.model.Coordinates
+import com.example.chessapp.model.Position
 
 class Rook(isWhite: Boolean): Figure(isWhite) {
     override fun toString(): String {

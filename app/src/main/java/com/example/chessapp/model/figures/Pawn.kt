@@ -1,7 +1,7 @@
-package com.example.chessapp.figures
+package com.example.chessapp.model.figures
 
-import com.example.chessapp.Coordinates
-import com.example.chessapp.Position
+import com.example.chessapp.model.Coordinates
+import com.example.chessapp.model.Position
 
 class Pawn(isWhite: Boolean): Figure(isWhite) {
     private val listOfStepsWhichCanAttack = ArrayList<Coordinates>()

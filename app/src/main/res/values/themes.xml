@@ -13,4 +13,7 @@
         <item name="android:statusBarColor">#827717</item>
         <!-- Customize your theme here. -->
     </style>
+    <style name="progress_loading">
+        <item name="colorAccent">@color/loading</item>
+    </style>
 </resources>

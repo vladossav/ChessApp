@@ -1,29 +1,79 @@
-package com.example.chessapp
+package com.example.chessapp.screen
 
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.chessapp.figures.*
+import androidx.lifecycle.viewModelScope
+import com.example.chessapp.R
+import com.example.chessapp.model.Coordinates
+import com.example.chessapp.model.Position
+import com.example.chessapp.model.figures.*
+import io.socket.client.IO
+import io.socket.client.Socket
+import io.socket.emitter.Emitter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChessboardViewModel: ViewModel() {
     var displayBoard = Array(8) {Array<View?>(8) {null} }
-    var whitePlayerTurn: MutableLiveData<Boolean> = MutableLiveData(true)
-    var gameFinished: MutableLiveData<Boolean> = MutableLiveData(false)
-    var youName: String = ""
-    var opponentName: String = ""
+    var whitePlayerTurn = MutableLiveData(true)
+    var gameFinished = MutableLiveData(false)
+    val socket: Socket = IO.socket("http://10.0.2.2:8000")
+    var yourName: String = ""
+    var opponentName: MutableLiveData<String> = MutableLiveData("")
+    private var gameId: String = ""
+    var isLoading = MutableLiveData(false)
 
-    private var boardFigures = Array(8) {Array(8) {Position(null)} }
+    private var boardFigures = Array(8) {Array(8) { Position(null) } }
     private var clickedPos: Coordinates = Coordinates(0,0)
     private var lastPos: Coordinates = Coordinates(0,0)
     private var cellSelected = false
 
-    var isWhiteChessboardSide = true
+    private var isWhiteChessboardSide = true
     private var numOfMoves = 0
     private var listOfAllowedSteps = ArrayList<Coordinates>()
 
-    fun initBoard(isWhiteSide: Boolean) {
-        isWhiteChessboardSide = isWhiteSide
+    private var socketConnect = Emitter.Listener {
+        isLoading.postValue(true)
+        Log.d("socket", "STATUS socketID: " + socket.id())
+        Log.d("socket","STATUS connected: " + socket.connected().toString())
+        Log.d("socket", "CLIENT emit name: $yourName")
+        socket.emit("start quick game", yourName)
+    }
+
+    private var socketStartGame = Emitter.Listener {
+        viewModelScope.launch {
+            Log.d("socket", "SERVER opponent name: ${it[0]}")
+            Log.d("socket", "SERVER isWhite: ${it[1]}")
+            Log.d("socket", "SERVER gameId: ${it[2]}")
+            withContext(Dispatchers.Main) {
+                opponentName.postValue(it[0].toString())
+                isWhiteChessboardSide = it[1].toString().toBoolean()
+                gameId = it[2].toString()
+                initBoard()
+                isLoading.postValue(false)
+            }
+        }
+    }
+
+    private var socketNewMove = Emitter.Listener {
+        val x1 = 0
+        val y1 = 32
+        val x2 = 2
+        val y2 = 3
+
+    }
+
+    init {
+        socket.on(Socket.EVENT_CONNECT, socketConnect)
+        socket.on("start game", socketStartGame)
+        socket.on("new move", socketNewMove)
+
+    }
+
+    private fun initBoard() {
         setStartPosition()
         cellSelected = false
         numOfMoves = 0
@@ -131,7 +181,7 @@ class ChessboardViewModel: ViewModel() {
         val kingAllowedSteps = boardFigures[xKing][yKing].getFigure()!!
             .getAllowedSteps(boardFigures,kingPos)
         for (step in kingAllowedSteps) {
-            val board: Array<Array<Position>> = Array(8) {Array(8) {Position(null)} }
+            val board: Array<Array<Position>> = Array(8) {Array(8) { Position(null) } }
             for (i in 0..7)
                 for (j in 0..7)
                     board[i][j] = Position(boardFigures[i][j])
@@ -215,6 +265,10 @@ class ChessboardViewModel: ViewModel() {
         for (i in 0..7) {
             boardFigures[i][1].setFigure(Pawn(false))
             boardFigures[i][6].setFigure(Pawn(true))
+        }
+
+        if (isWhiteChessboardSide) {
+
         }
     }
 

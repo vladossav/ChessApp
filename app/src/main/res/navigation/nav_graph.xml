@@ -8,7 +8,7 @@
 
     <fragment
         android:id="@+id/chessboardFragment"
-        android:name="com.example.chessapp.ChessboardFragment"
+        android:name="com.example.chessapp.screen.ChessboardFragment"
         android:label="fragment_chessboard"
         tools:layout="@layout/fragment_chessboard" >
         <action
@@ -17,7 +17,7 @@
     </fragment>
     <fragment
         android:id="@+id/menuFragment"
-        android:name="com.example.chessapp.MenuFragment"
+        android:name="com.example.chessapp.screen.MenuFragment"
         android:label="fragment_menu"
         tools:layout="@layout/fragment_menu" >
         <action
