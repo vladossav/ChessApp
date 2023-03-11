@@ -59,6 +59,7 @@ class ChessboardViewModel: ViewModel() {
     }
 
     private var socketOpponentMove = Emitter.Listener {
+        if (it[4].toString() == socket.id()) return@Listener
         Log.d("socket", "SERVER last pos: ${it[0]} ${it[1]}")
         Log.d("socket", "SERVER new pos: ${it[2]} ${it[3]}")
         val x1 = it[0].toString().toInt()
@@ -72,6 +73,7 @@ class ChessboardViewModel: ViewModel() {
                 whitePlayerTurn.value = !whitePlayerTurn.value!!
                 cellSelected = false
                 setBoard()
+                if (isKingInDanger(boardFigures) && isCheckmate()) gameFinished.postValue(true)
             }
         }
     }
@@ -134,17 +136,18 @@ class ChessboardViewModel: ViewModel() {
                 }
 
                 whitePlayerTurn.value = !whitePlayerTurn.value!!
-
                 socket.emit("new move", gameId, lastPos.getX(),lastPos.getY(), x, y)
+
+                Log.d("socket","${whitePlayerTurn.value}")
             }
             cellSelected = false
         }
-
 
         lastPos = Coordinates(x, y)
         setBoard()
 
         if (isKingInDanger(boardFigures) && isCheckmate()) gameFinished.postValue(true)
+
     }
 
     private fun isKingInDanger(board: Array<Array<Position>>):Boolean {
