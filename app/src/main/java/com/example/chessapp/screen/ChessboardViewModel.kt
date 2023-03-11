@@ -58,18 +58,29 @@ class ChessboardViewModel: ViewModel() {
         }
     }
 
-    private var socketNewMove = Emitter.Listener {
-        val x1 = 0
-        val y1 = 32
-        val x2 = 2
-        val y2 = 3
-
+    private var socketOpponentMove = Emitter.Listener {
+        Log.d("socket", "SERVER last pos: ${it[0]} ${it[1]}")
+        Log.d("socket", "SERVER new pos: ${it[2]} ${it[3]}")
+        val x1 = it[0].toString().toInt()
+        val y1 = it[1].toString().toInt()
+        val x2 = it[2].toString().toInt()
+        val y2 = it[3].toString().toInt()
+        viewModelScope.launch {
+            withContext(Dispatchers.Main) {
+                boardFigures[x2][y2].setFigure(boardFigures[x1][y1].getFigure())
+                boardFigures[x1][y1].setFigure(null)
+                whitePlayerTurn.value = !whitePlayerTurn.value!!
+                cellSelected = false
+                setBoard()
+            }
+        }
     }
+
 
     init {
         socket.on(Socket.EVENT_CONNECT, socketConnect)
         socket.on("start game", socketStartGame)
-        socket.on("new move", socketNewMove)
+        socket.on("opponent move", socketOpponentMove)
 
     }
 
@@ -81,6 +92,7 @@ class ChessboardViewModel: ViewModel() {
     }
 
     fun cellHandling(cellId: Int) {
+        if (whitePlayerTurn.value != isWhiteChessboardSide) return
         setClickPosition(cellId)
 
         val x = clickedPos.getX()
@@ -122,9 +134,12 @@ class ChessboardViewModel: ViewModel() {
                 }
 
                 whitePlayerTurn.value = !whitePlayerTurn.value!!
+
+                socket.emit("new move", gameId, lastPos.getX(),lastPos.getY(), x, y)
             }
             cellSelected = false
         }
+
 
         lastPos = Coordinates(x, y)
         setBoard()
